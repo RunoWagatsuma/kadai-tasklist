@@ -1,7 +1,9 @@
 class TasksController < ApplicationController
-
+  before_action :require_user_logged_in, except: [:index]
+  before_action :correct_user, only: [:show, :edit, :update, :destroy]
+  
   def index
-    @tasks = Task.all
+    @tasks = current_user.tasks if logged_in?
   end
 
   def show
@@ -13,7 +15,7 @@ class TasksController < ApplicationController
   end
 
   def create
-    @task = Task.new(task_params)
+    @task = current_user.tasks.build(task_params)
     
     if @task.save
       flash[:success] = 'タスクが保存されました'
@@ -54,5 +56,10 @@ class TasksController < ApplicationController
     params.require(:task).permit(:content, :status)
     # params = { task: { content: "こんにちは"}, submit: "送信" }
     # params[:task][:content] #=> "こんにちは" 
+  end
+  
+  def correct_user
+    @task = current_user.tasks.find_by(id: params[:id])
+    redirect_to root_path if !@task
   end
 end
